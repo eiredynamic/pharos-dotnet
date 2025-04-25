@@ -67,7 +67,7 @@ namespace Eiredynamic.Pharos.Tests
 
             // Act & Assert
             Assert.ThrowsAsync<ArgumentNullException>(() =>
-                beacon.SendBeacon(_cts.Token, null));
+                beacon.SendBeacon(_cts.Token, null!));
         }
 
         [Fact]
