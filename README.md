@@ -24,7 +24,7 @@ Pharos targets .NET Standard 2.0 for maximum compatibility and can be used in pr
 ### NuGet Installation
 ```sh
 # Install via NuGet
- dotnet add package Pharos
+ dotnet add package Eiredynamic.Pharos
 ```
 
 ## Quick Start
