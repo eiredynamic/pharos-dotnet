@@ -33,14 +33,14 @@ Pharos targets .NET Standard 2.0 for maximum compatibility and can be used in pr
 
 ```csharp
 // Create a message to broadcast
-var message = new PharosMessage(hostId);
+var message = "hello Pharos!";
 
 // Start broadcasting messages (Beacon)
-var beacon = new Beacon<PharosMessage>();
+var beacon = new Beacon<string>();
 await beacon.SendBeacon(cancellationToken, message);
 
 // Listen for messages (Probe)
-var probe = new Probe<PharosMessage>();
+var probe = new Probe<string>();
 
 await foreach (var receivedMessage in probe.StartReceiving(cancellationToken)) 
 {
@@ -50,7 +50,7 @@ await foreach (var receivedMessage in probe.StartReceiving(cancellationToken))
 
 ### Generic Messages
 
-While `PharosSampleMessage` is provided as a reference implementation, you can use any class as a message type as long as it meets these requirements:
+While string is used above and `PharosSampleMessage` is provided as a reference implementation, you can use any class as a message type as long as it meets these requirements:
 
 1. The class must be serializable (compatible with Newtonsoft.Json).
 2. The class must be a reference type with a parameterless constructor (`where T : class, new()`). However, this does **not** guarantee JSON compatibility—ensure all properties are serializable and avoid complex object graphs where possible.
@@ -100,7 +100,6 @@ The library can be configured using `ConfigOptions`:
 ```csharp
 var config = new ConfigOptions 
 { 
-    HostId = Guid.NewGuid(), 
     DestinationPort = 12345, 
     SourcePort = 0, // Dynamic port allocation 
     MulticastIP = IPAddress.Parse("239.0.0.1"), 
