@@ -12,12 +12,12 @@ using System.Threading.Tasks;
 
 namespace Eiredynamic.Pharos;
 
-internal interface IProbe<out T> where T : class, new()
+internal interface IProbe<out T> where T : class
 {
     public IAsyncEnumerable<T> StartReceiving(CancellationToken cancellationToken);
 }
 
-public class Probe<T>: IProbe<T> where T : class, new()
+public class Probe<T>: IProbe<T> where T : class
 {
     private static Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly ConfigOptions _config;
@@ -82,8 +82,7 @@ public class Probe<T>: IProbe<T> where T : class, new()
             }
             if (cancellationToken.IsCancellationRequested)
             {
-                _logger.Info("Cancellation requested. Stopping probe.");
-                throw new OperationCanceledException();
+                _logger.Info("Cancellation requested. Probe stopped.");
             }
         }
     }

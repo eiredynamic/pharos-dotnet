@@ -51,8 +51,7 @@ namespace Eiredynamic.Pharos
                 }
                 if (cancellationToken.IsCancellationRequested)
                 {
-                    _logger.Info("Cancellation requested. Stopping beacon.");
-                    throw new OperationCanceledException();
+                    _logger.Info("Cancellation requested. Beacon stopped.");
                 }
             }
         }

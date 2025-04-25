@@ -1,5 +1,4 @@
-﻿using Eiredynamic.Pharos.Models;
-using NLog;
+﻿using NLog;
 
 namespace Eiredynamic.Pharos.ExampleApp
 {
@@ -16,6 +15,7 @@ namespace Eiredynamic.Pharos.ExampleApp
             await Task.WhenAll(tasks);
 
             // This is a blocking call to keep the console window open
+            Console.WriteLine("Press any key to exit...");
             Console.ReadLine();
         }
 
@@ -30,7 +30,7 @@ namespace Eiredynamic.Pharos.ExampleApp
         async static Task Probe(CancellationTokenSource cts)
         {
             _logger.Info("Starting Probe!");
-            var probe = new Probe<PharosSampleMessage>();
+            var probe = new Probe<string>();
             await foreach (var pharosMessage in probe.StartReceiving(cts.Token))
             {
                 _logger.Info(pharosMessage) ;
