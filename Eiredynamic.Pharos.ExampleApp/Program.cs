@@ -15,7 +15,7 @@ namespace Eiredynamic.Pharos.ExampleApp
             await Task.WhenAll(tasks);
 
             // This is a blocking call to keep the console window open
-            Console.WriteLine("Press any key to exit...");
+            Console.WriteLine("Press enter key to exit...");
             Console.ReadLine();
         }
 

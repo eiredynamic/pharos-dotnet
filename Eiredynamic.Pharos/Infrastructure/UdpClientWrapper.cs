@@ -45,6 +45,11 @@ public class UdpClientWrapper : IUdpClient
         _udpClient.JoinMulticastGroup(multicastAddress);
     }
 
+    public void DropMulticastGroup(IPAddress multicastAddress)
+    {
+        _udpClient.DropMulticastGroup(multicastAddress);
+    }
+
     public void Dispose()
     {
         Dispose(true);

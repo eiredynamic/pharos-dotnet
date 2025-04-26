@@ -15,7 +15,7 @@ namespace Eiredynamic.Pharos
     }
     public class Beacon<T> : IBeacon<T> where T : class
     {
-        private static Logger _logger = LogManager.GetCurrentClassLogger();
+        private readonly static Logger _logger = LogManager.GetCurrentClassLogger();
         private readonly ConfigOptions _config;
 
         public Beacon() { 
@@ -32,27 +32,50 @@ namespace Eiredynamic.Pharos
             {
                 throw new ArgumentNullException(nameof(item));
             }
-            // Create a UdpClient (local port can be dynamically assigned)
+
+            byte[] buffer;
+            try
+            {
+                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
+            }
+            catch (JsonSerializationException ex)
+            {
+                _logger.Error(ex, $"Serialization failed for type {typeof(T).Name}. Check that all properties are serializable and properly decorated with [JsonProperty] if needed.");
+                throw; 
+            }
+            if (buffer.Length > 1400) _logger.Warn($"Beacon payload for {typeof(T).Name} may exceed safe UDP limits ({buffer.Length} bytes)");
+
             using (UdpClient sender = new UdpClient(_config.SourcePort))
             {
                 sender.AllowNatTraversal(true);
                 IPEndPoint _multicastEndpoint = new IPEndPoint(_config.MulticastIP, _config.DestinationPort);
                 _logger.Info($"Starting beacon to send to {_config.MulticastIP}:{_config.DestinationPort}");
                 
-                byte[] buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
                 while (!cancellationToken.IsCancellationRequested)
                 {
-                    // Send the multicast message
-                    await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
-                    _logger.Trace($"Sent: {item.ToString()}");
-
-                    // Wait for a period before sending the next beacon (e.g., 5 seconds)
-                    Thread.Sleep(_config.BeaconInterval);
+                    try
+                    {
+                        await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
+                        _logger.Trace($"Sent beacon of type {typeof(T).Name}");
+                        // Wait for a period before sending the next beacon (e.g., 5 seconds)
+                        await Task.Delay(_config.BeaconInterval, cancellationToken);
+                    }
+                    catch (SocketException ex)
+                    {
+                        _logger.Error(ex, "Failed to send beacon. Network may be unreachable or multicast misconfigured.");
+                        break;
+                    }
+                    catch (Exception ex) when (!(ex is OperationCanceledException))
+                    {
+                        _logger.Error(ex, "Unexpected error during beacon send.");
+                        throw;
+                    }
+                    catch (TaskCanceledException)
+                    {
+                        break;
+                    }
                 }
-                if (cancellationToken.IsCancellationRequested)
-                {
-                    _logger.Info("Cancellation requested. Beacon stopped.");
-                }
+                _logger.Info("Cancellation requested. Beacon stopped.");
             }
         }
     }
