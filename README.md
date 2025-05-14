@@ -59,7 +59,7 @@ probe.OnEvent += (sender, args) =>
     Console.WriteLine($"Received message: {args.Event}");
 };
 
-probe.StartReceiving(cancellationToken); // still required to start the receive loop
+probe.StartReceivingWithEventsOnly(cancellationToken); // still required to start the receive loop
 ```
 
 The event uses the following signature:
