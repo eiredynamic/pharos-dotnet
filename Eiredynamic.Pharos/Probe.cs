@@ -112,7 +112,6 @@ public class Probe<T>: IProbe<T> where T : class
 
                 if (obj != null)
                 {
-                    OnEvent?.Invoke(this, new ProbeEventArgs<T>(obj));
                     yield return obj;
                 }
                 else
@@ -133,5 +132,79 @@ public class Probe<T>: IProbe<T> where T : class
         }
     }
 
+    public async Task StartReceivingWithEventsOnly(CancellationToken cancellationToken)
+    {
+        if (_udpClient == null)
+        {
+            _udpClient = new UdpClientWrapper(new UdpClient());
+        }
+
+        using (_udpClient)
+        {
+            IPEndPoint _endPoint = new IPEndPoint(IPAddress.Any, _config.DestinationPort);
+            _udpClient.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _udpClient.AllowNatTraversal(true);
+            _udpClient.ExclusiveAddressUse = false;
+            _udpClient.Bind(_endPoint);
+
+            _udpClient.JoinMulticastGroup(_config.MulticastIP);
+            _logger.Info($"Listening (event-only) on {_config.MulticastIP}:{_config.DestinationPort}");
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                UdpReceiveResult result;
+                try
+                {
+                    var receiveTask = _udpClient.ReceiveAsync();
+                    var cancelTask = Task.Delay(Timeout.Infinite, cancellationToken);
+                    var completedTask = await Task.WhenAny(receiveTask, cancelTask);
+                    if (completedTask == cancelTask)
+                        break;
+
+                    result = await receiveTask;
+                }
+                catch (SocketException ex)
+                {
+                    _logger.Error(ex, "Socket error in event-only probe.");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "Unhandled error in event-only probe.");
+                    throw;
+                }
+
+                if (result.Buffer == null || result.Buffer.Length == 0)
+                    continue;
+
+                string json = Encoding.UTF8.GetString(result.Buffer);
+                _logger.Trace($"Received beacon (event-only) from {result.RemoteEndPoint}");
+
+                try
+                {
+                    var obj = JsonConvert.DeserializeObject<T>(json);
+                    if (obj != null)
+                    {
+                        OnEvent?.Invoke(this, new ProbeEventArgs<T>(obj));
+                    }
+                }
+                catch (JsonException ex)
+                {
+                    _logger.Warn(ex, "Deserialization failed for beacon (event-only).");
+                }
+            }
+
+            try
+            {
+                _udpClient.DropMulticastGroup(_config.MulticastIP);
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn(ex, "Failed to leave multicast group cleanly (event-only).");
+            }
+
+            _logger.Info("Event-only probe shut down.");
+        }
+    }
 
 }

@@ -36,10 +36,7 @@ namespace Eiredynamic.Pharos.ExampleApp
                 _logger.Info($"Received event effect: {e.Event}");
             };
 
-            await foreach (var pharosMessage in probe.StartReceiving(cts.Token))
-            {
-                _logger.Info(pharosMessage) ;
-            }
+            await probe.StartReceivingWithEventsOnly(cts.Token);
         }
     }
 }

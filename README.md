@@ -50,7 +50,7 @@ await foreach (var receivedMessage in probe.StartReceiving(cancellationToken))
 
 ### Event-Based Listening
 
-As an alternative to StartReceiving, you can subscribe to the OnEvent event:
+As an alternative to StartReceiving, you can use StartReceivingWithEventsOnly and subscribe to the OnEvent event:
 ```csharp
 var probe = new Probe<string>();
 
