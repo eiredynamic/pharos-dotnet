@@ -22,6 +22,7 @@ public class Probe<T>: IProbe<T> where T : class
     private static Logger _logger = LogManager.GetCurrentClassLogger();
     private readonly ConfigOptions _config;
     private IUdpClient _udpClient;
+    public event EventHandler<ProbeEventArgs<T>>? OnEvent;
 
     public Probe()
     {
@@ -111,6 +112,7 @@ public class Probe<T>: IProbe<T> where T : class
 
                 if (obj != null)
                 {
+                    OnEvent?.Invoke(this, new ProbeEventArgs<T>(obj));
                     yield return obj;
                 }
                 else
@@ -130,4 +132,6 @@ public class Probe<T>: IProbe<T> where T : class
             _logger.Info("Cancellation requested. Probe stopped.");
         }
     }
+
+
 }

@@ -48,6 +48,25 @@ await foreach (var receivedMessage in probe.StartReceiving(cancellationToken))
 }
 ```
 
+### Event-Based Listening
+
+As an alternative to StartReceiving, you can subscribe to the OnEvent event:
+```csharp
+var probe = new Probe<string>();
+
+probe.OnEvent += (sender, args) =>
+{
+    Console.WriteLine($"Received message: {args.Event}");
+};
+
+probe.StartReceiving(cancellationToken); // still required to start the receive loop
+```
+
+The event uses the following signature:
+```csharp
+public event EventHandler<ProbeEventArgs<T>>? OnEvent;
+```
+
 ### Generic Messages
 
 While string is used above and `PharosSampleMessage` is provided as a reference implementation, you can use any class as a message type as long as it meets these requirements:

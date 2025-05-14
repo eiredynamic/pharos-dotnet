@@ -31,6 +31,11 @@ namespace Eiredynamic.Pharos.ExampleApp
         {
             _logger.Info("Starting Probe!");
             var probe = new Probe<string>();
+
+            probe.OnEvent += (object? sender, ProbeEventArgs<string> e) => {
+                _logger.Info($"Received event effect: {e.Event}");
+            };
+
             await foreach (var pharosMessage in probe.StartReceiving(cts.Token))
             {
                 _logger.Info(pharosMessage) ;
