@@ -41,7 +41,7 @@ namespace Eiredynamic.Pharos
             catch (JsonSerializationException ex)
             {
                 _logger.Error(ex, $"Serialization failed for type {typeof(T).Name}. Check that all properties are serializable and properly decorated with [JsonProperty] if needed.");
-                throw; 
+                throw new InvalidOperationException($"Beacon serialization failed for type {typeof(T).Name}.", ex);
             }
             if (buffer.Length > 1400) _logger.Warn($"Beacon payload for {typeof(T).Name} may exceed safe UDP limits ({buffer.Length} bytes)");
 
@@ -53,6 +53,7 @@ namespace Eiredynamic.Pharos
                 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+#pragma warning disable S2139 // Re-throwing caught exception
                     try
                     {
                         await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
@@ -65,7 +66,8 @@ namespace Eiredynamic.Pharos
                         _logger.Error(ex, "Failed to send beacon. Network may be unreachable or multicast misconfigured.");
                         break;
                     }
-                    catch (Exception ex) when (!(ex is OperationCanceledException))
+
+                    catch (Exception ex) when (ex is not OperationCanceledException)
                     {
                         _logger.Error(ex, "Unexpected error during beacon send.");
                         throw;
@@ -74,6 +76,7 @@ namespace Eiredynamic.Pharos
                     {
                         break;
                     }
+#pragma warning restore S2139
                 }
                 _logger.Info("Cancellation requested. Beacon stopped.");
             }
@@ -81,23 +84,7 @@ namespace Eiredynamic.Pharos
 
         public async Task SendBeacon(CancellationToken cancellationToken, Func<T> getItem)
         {
-            T item = getItem();
-            if (item is null)
-            {
-                throw new ArgumentNullException(nameof(item));
-            }
-
-            byte[] buffer;
-            try
-            {
-                buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
-            }
-            catch (JsonSerializationException ex)
-            {
-                _logger.Error(ex, $"Serialization failed for type {typeof(T).Name}. Check that all properties are serializable and properly decorated with [JsonProperty] if needed.");
-                throw;
-            }
-            if (buffer.Length > 1400) _logger.Warn($"Beacon payload for {typeof(T).Name} may exceed safe UDP limits ({buffer.Length} bytes)");
+            
 
             using (UdpClient sender = new UdpClient(_config.SourcePort))
             {
@@ -107,6 +94,24 @@ namespace Eiredynamic.Pharos
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
+                    T item = getItem();
+                    if (item is null)
+                    {
+                        throw new ArgumentNullException(nameof(getItem));
+                    }
+                    byte[] buffer;
+                    try
+                    {
+                        buffer = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(item));
+                    }
+                    catch (JsonSerializationException ex)
+                    {
+                        _logger.Error(ex, $"Serialization failed for type {typeof(T).Name}. Check that all properties are serializable and properly decorated with [JsonProperty] if needed.");
+                        throw new InvalidOperationException($"Beacon serialization failed for type {typeof(T).Name}.", ex);
+                    }
+                    if (buffer.Length > 1400) _logger.Warn($"Beacon payload for {typeof(T).Name} may exceed safe UDP limits ({buffer.Length} bytes)");
+
+#pragma warning disable S2139 // Re-throwing caught exception
                     try
                     {
                         await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
@@ -128,6 +133,7 @@ namespace Eiredynamic.Pharos
                     {
                         break;
                     }
+#pragma warning restore S2139
                 }
                 _logger.Info("Cancellation requested. Beacon stopped.");
             }
