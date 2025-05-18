@@ -67,6 +67,36 @@ The event uses the following signature:
 public event EventHandler<ProbeEventArgs<T>>? OnEvent;
 ```
 
+### Dynamic Beaconing
+
+In scenarios where the message content may change between broadcasts, you can use the dynamic overload of `SendBeacon` that accepts a delegate:
+
+```csharp
+var beacon = new Beacon<CustomMessage>();
+
+await beacon.SendBeacon(cancellationToken, () =>
+{
+    return new CustomMessage
+    {
+        Id = Guid.NewGuid(),
+        Data = DateTime.UtcNow.ToString("O")
+    };
+});
+```
+
+#### Method Signature
+```csharp
+Task SendBeacon(CancellationToken cancellationToken, Func<T> getItem)
+```
+
+- `cancellationToken`: Gracefully terminates the beacon loop when triggered.
+
+- `getItem`: A delegate returning a new instance of the message to broadcast.
+
+This overload re-evaluates getItem() before each beacon is sent, enabling time-sensitive or real-time messages without recreating the Beacon<T> instance.
+
+⚠️ _Use this method when your broadcast content is dynamic. If the message is static, prefer the simpler overload to avoid unnecessary object creation and serialization._
+
 ### Generic Messages
 
 While string is used above and `PharosSampleMessage` is provided as a reference implementation, you can use any class as a message type as long as it meets these requirements:
