@@ -44,7 +44,7 @@ var probe = new Probe<string>();
 
 await foreach (var receivedMessage in probe.StartReceiving(cancellationToken)) 
 {
-    Console.WriteLine($"Received message from {receivedMessage.Hostname}");
+    Console.WriteLine($"Received message {receivedMessage}");
 }
 ```
 
