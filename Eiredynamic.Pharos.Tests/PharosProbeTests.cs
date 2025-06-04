@@ -75,6 +75,53 @@ namespace Eiredynamic.Pharos.Tests
 
         }
 
+        [Fact]
+        public async Task StartReceivingWithEventsOnly_ShouldInvokeEvent()
+        {
+            // Arrange
+            using var cts = new CancellationTokenSource();
+            var expectedMessage = new PharosSampleMessage();
+            var jsonMessage = JsonConvert.SerializeObject(expectedMessage);
+            var receiveResult = new UdpReceiveResult(Encoding.UTF8.GetBytes(jsonMessage), new IPEndPoint(IPAddress.Any, 0));
+
+            var mockUdpClient = Substitute.For<IUdpClient>();
+            mockUdpClient.ReceiveAsync().Returns(Task.FromResult(receiveResult));
+            mockUdpClient.ExclusiveAddressUse = false;
+            mockUdpClient.When(x => x.SetSocketOption(Arg.Any<SocketOptionLevel>(), Arg.Any<SocketOptionName>(), Arg.Any<bool>())).Do(_ => { });
+            mockUdpClient.When(x => x.Bind(Arg.Any<IPEndPoint>())).Do(_ => { });
+            mockUdpClient.When(x => x.JoinMulticastGroup(Arg.Any<IPAddress>())).Do(_ => { });
+            mockUdpClient.When(x => x.DropMulticastGroup(Arg.Any<IPAddress>())).Do(_ => { });
+
+            var probe = new Probe<PharosSampleMessage>(new ConfigOptions(), mockUdpClient);
+
+            PharosSampleMessage? received = null;
+            probe.OnEvent += (sender, args) =>
+            {
+                received = args.Event;
+                cts.Cancel();
+            };
+
+            // Act
+            await probe.StartReceivingWithEventsOnly(cts.Token);
+
+            // Assert
+            Assert.NotNull(received);
+            Assert.Equivalent(expectedMessage, received!);
+        }
+
+        [Fact]
+        public void StartReceivingWithEventsOnly_ShouldHandleCancellation()
+        {
+            // Arrange
+            var cancellationToken = _cts.Token;
+            _cts.CancelAfter(150); // Cancel quickly
+
+            // Act & Assert
+            Assert.ThrowsAsync<OperationCanceledException>(() =>
+                _probe.StartReceivingWithEventsOnly(cancellationToken));
+
+        }
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
