@@ -16,15 +16,15 @@ namespace Eiredynamic.Pharos
     public class Beacon<T> : IBeacon<T> where T : class
     {
         private readonly static Logger _logger = LogManager.GetCurrentClassLogger();
-        private readonly ConfigOptions _config;
+        public readonly ConfigOptions config;
 
         public Beacon() { 
-            _config = new ConfigOptions();
+            config = new ConfigOptions();
         }
 
         public Beacon(ConfigOptions config)
         {
-            _config = config;
+            this.config = config;
         }
         public async Task SendBeacon(CancellationToken cancellationToken, T item)
         {
@@ -71,11 +71,11 @@ namespace Eiredynamic.Pharos
 
         private async Task SendBeaconLoop(CancellationToken cancellationToken, Func<byte[]> getBuffer)
         {
-            using (UdpClient sender = new UdpClient(_config.SourcePort))
+            using (UdpClient sender = new UdpClient(config.SourcePort))
             {
                 sender.AllowNatTraversal(true);
-                IPEndPoint _multicastEndpoint = new IPEndPoint(_config.MulticastIP, _config.DestinationPort);
-                _logger.Info($"Starting beacon to send to {_config.MulticastIP}:{_config.DestinationPort}");
+                IPEndPoint _multicastEndpoint = new IPEndPoint(config.MulticastIP, config.DestinationPort);
+                _logger.Info($"Starting beacon to send to {config.MulticastIP}:{config.DestinationPort}");
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -85,7 +85,7 @@ namespace Eiredynamic.Pharos
                     {
                         await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
                         _logger.Trace($"Sent beacon of type {typeof(T).Name}");
-                        await Task.Delay(_config.BeaconInterval, cancellationToken);
+                        await Task.Delay(config.BeaconInterval, cancellationToken);
                     }
                     catch (SocketException ex)
                     {
