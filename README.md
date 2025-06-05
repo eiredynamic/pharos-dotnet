@@ -10,6 +10,7 @@ The library consists of two main components:
 
 ## Use Cases
 - Simple serverless messaging.
+- P2P discovery and communication.
 - Server discovery (Building block for consensus algorithms).
 - Service mesh discovery.
 - Network presence detection.
