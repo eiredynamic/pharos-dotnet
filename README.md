@@ -10,6 +10,7 @@ The library consists of two main components:
 
 ## Use Cases
 - Simple serverless messaging.
+- P2P discovery and communication.
 - Server discovery (Building block for consensus algorithms).
 - Service mesh discovery.
 - Network presence detection.
@@ -37,6 +38,7 @@ var message = "hello Pharos!";
 
 // Start broadcasting messages (Beacon)
 var beacon = new Beacon<string>();
+// SendBeacon will continue broadcasting until the token is cancelled
 await beacon.SendBeacon(cancellationToken, message);
 
 // Listen for messages (Probe)
@@ -121,6 +123,8 @@ To minimize network overhead:
 - Include only essential data fields.
 - Consider using value types (`int`, `Guid`) over strings where possible.
 - Avoid nested complex objects unless necessary.
+- Keep serialized payloads under ~1400 bytes to stay within safe UDP limits.
+- Use JSON Ignore attributes to exclude non-essential properties.
 
 Example usage:
 
