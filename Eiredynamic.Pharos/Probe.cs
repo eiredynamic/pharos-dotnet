@@ -15,6 +15,7 @@ namespace Eiredynamic.Pharos;
 internal interface IProbe<out T> where T : class
 {
     public IAsyncEnumerable<T> StartReceiving(CancellationToken cancellationToken);
+    public Task StartReceivingWithEventsOnly(CancellationToken cancellationToken);
 }
 
 public class Probe<T>: IProbe<T> where T : class
