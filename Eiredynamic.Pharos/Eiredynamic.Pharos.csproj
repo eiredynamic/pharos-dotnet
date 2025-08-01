@@ -5,7 +5,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>13.0</LangVersion>
     <PackageId>Eiredynamic.Pharos</PackageId>
-    <Version>1.3.4</Version>
+    <Version>1.4.0</Version>
     <Authors>eiredynamic</Authors>
     <Description>Pharos is a .NET discovery library that enables beacon/probe detection and serialized message exchange.</Description>
     <Copyright>eiredynamic</Copyright>
@@ -38,6 +38,7 @@
     <PackageReference Include="NLog" Version="6.0.1" />
     <PackageReference Include="NLog.Extensions.Logging" Version="6.0.1" />
     <PackageReference Include="NLog.Schema" Version="6.0.1" />
+    <PackageReference Include="System.Net.Sockets" Version="4.3.0" />
   </ItemGroup>
 
   
