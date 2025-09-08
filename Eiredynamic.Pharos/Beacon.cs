@@ -1,8 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using Eiredynamic.Pharos.Infrastructure;
+using Newtonsoft.Json;
 using NLog;
 using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,16 +18,30 @@ namespace Eiredynamic.Pharos
     public class Beacon<T> : IBeacon<T> where T : class
     {
         private readonly static Logger _logger = LogManager.GetCurrentClassLogger();
-        public readonly ConfigOptions config;
+        public readonly ConfigOptions _config;
+        private IUdpClient _udpClient;
 
-        public Beacon() { 
-            config = new ConfigOptions();
+        public Beacon()
+        {
+            _config = new ConfigOptions();
         }
 
         public Beacon(ConfigOptions config)
         {
-            this.config = config;
+            _config = config;
         }
+
+        public Beacon(IUdpClient udpClient)
+        {
+            _udpClient = udpClient;
+        }
+
+        public Beacon(ConfigOptions config, IUdpClient udpClient)
+        {
+            _config = config;
+            _udpClient = udpClient;
+        }
+
         public async Task SendBeacon(CancellationToken cancellationToken, T item)
         {
             if (item is null)
@@ -71,11 +87,18 @@ namespace Eiredynamic.Pharos
 
         private async Task SendBeaconLoop(CancellationToken cancellationToken, Func<byte[]> getBuffer)
         {
-            using (UdpClient sender = new UdpClient(config.SourcePort))
+             if (_udpClient == null)
             {
-                sender.AllowNatTraversal(true);
-                IPEndPoint _multicastEndpoint = new IPEndPoint(config.MulticastIP, config.DestinationPort);
-                _logger.Info($"Starting beacon to send to {config.MulticastIP}:{config.DestinationPort}");
+                _udpClient = new UdpClientWrapper(new UdpClient());
+            }
+
+            using (_udpClient)
+            {
+                _udpClient.Bind(new IPEndPoint(IPAddress.Any, _config.SourcePort));
+                _udpClient.AllowNatTraversal(true);
+            
+                IPEndPoint _multicastEndpoint = new IPEndPoint(_config.MulticastIP, _config.DestinationPort);
+                _logger.Info($"Starting beacon to send to {_config.MulticastIP}:{_config.DestinationPort}");
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -83,9 +106,9 @@ namespace Eiredynamic.Pharos
                     byte[] buffer = getBuffer();
                     try
                     {
-                        await sender.SendAsync(buffer, buffer.Length, _multicastEndpoint);
+                        await _udpClient.SendAsync(buffer, buffer.Length, _multicastEndpoint);
                         _logger.Trace($"Sent beacon of type {typeof(T).Name}");
-                        await Task.Delay(config.BeaconInterval, cancellationToken);
+                        await Task.Delay(_config.BeaconInterval, cancellationToken);
                     }
                     catch (SocketException ex)
                     {

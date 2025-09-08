@@ -15,5 +15,6 @@ public interface IUdpClient : IDisposable
     // can't access UdpClient.Client in Facade (well, its actually null), so instead of accessing UdpClient.Client, move socket-related methods directly into IUdpClient.
     void SetSocketOption(SocketOptionLevel level, SocketOptionName name, bool value);
     void Bind(IPEndPoint localEP);
+    Task SendAsync(byte[] datagram, int bytes, IPEndPoint endPoint);
 }
 
