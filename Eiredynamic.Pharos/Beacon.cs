@@ -17,18 +17,18 @@ namespace Eiredynamic.Pharos
     }
     public class Beacon<T> : IBeacon<T> where T : class
     {
-        private readonly static Logger _logger = LogManager.GetCurrentClassLogger();
-        public readonly ConfigOptions _config;
+        private static readonly Logger _logger = LogManager.GetCurrentClassLogger();
+        public ConfigOptions Config { get; }
         private IUdpClient _udpClient;
 
         public Beacon()
         {
-            _config = new ConfigOptions();
+            Config = new ConfigOptions();
         }
 
         public Beacon(ConfigOptions config)
         {
-            _config = config;
+            Config = config;
         }
 
         public Beacon(IUdpClient udpClient)
@@ -38,7 +38,7 @@ namespace Eiredynamic.Pharos
 
         public Beacon(ConfigOptions config, IUdpClient udpClient)
         {
-            _config = config;
+            Config = config;
             _udpClient = udpClient;
         }
 
@@ -99,11 +99,11 @@ namespace Eiredynamic.Pharos
 
             using (_udpClient)
             {
-                _udpClient.Bind(new IPEndPoint(IPAddress.Any, _config.SourcePort));
+                _udpClient.Bind(new IPEndPoint(IPAddress.Any, Config.SourcePort));
                 _udpClient.AllowNatTraversal(true);
             
-                IPEndPoint _multicastEndpoint = new IPEndPoint(_config.MulticastIP, _config.DestinationPort);
-                _logger.Info($"Starting beacon to send to {_config.MulticastIP}:{_config.DestinationPort}");
+                IPEndPoint _multicastEndpoint = new IPEndPoint(Config.MulticastIP, Config.DestinationPort);
+                _logger.Info($"Starting beacon to send to {Config.MulticastIP}:{Config.DestinationPort}");
 
                 while (!cancellationToken.IsCancellationRequested)
                 {
@@ -113,7 +113,7 @@ namespace Eiredynamic.Pharos
                     {
                         await _udpClient.SendAsync(buffer, buffer.Length, _multicastEndpoint);
                         _logger.Trace($"Sent beacon of type {typeof(T).Name}");
-                        await Task.Delay(_config.BeaconInterval, cancellationToken);
+                        await Task.Delay(Config.BeaconInterval, cancellationToken);
                     }
                     catch (SocketException ex)
                     {

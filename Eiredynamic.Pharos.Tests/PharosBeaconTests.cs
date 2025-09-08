@@ -44,7 +44,7 @@ namespace Eiredynamic.Pharos.Tests
 
             // Assert
             Assert.NotNull(beacon);
-            Assert.Equal(_config.MulticastIP, beacon.config.MulticastIP);
+            Assert.Equal(_config.MulticastIP, beacon.Config.MulticastIP);
         }
 
         [Fact]
