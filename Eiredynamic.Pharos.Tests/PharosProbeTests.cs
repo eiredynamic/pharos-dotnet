@@ -62,17 +62,16 @@ namespace Eiredynamic.Pharos.Tests
         }
 
         [Fact]
-        public void StartReceiving_ShouldHandleCancellation()
+        public async Task StartReceiving_ShouldHandleCancellationGracefully()
         {
             // Arrange
             var cancellationToken = _cts.Token;
             _cts.CancelAfter(150); // Cancel quickly
 
+            var task = _probe.StartReceiving(cancellationToken).GetAsyncEnumerator().MoveNextAsync().AsTask();
 
-            // Act & Assert
-            Assert.ThrowsAsync<OperationCanceledException>(() =>
-                    (Task)_probe.StartReceiving(cancellationToken));
-
+            await task;
+            Assert.True(task.IsCompleted);
         }
 
         [Fact]

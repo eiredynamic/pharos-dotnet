@@ -33,6 +33,11 @@ namespace Eiredynamic.Pharos
                 throw new ArgumentNullException(nameof(item));
             }
 
+            if (cancellationToken.IsCancellationRequested)
+            {
+                return;
+            }
+
             byte[] buffer = Serialize(item);
             await SendBeaconLoop(cancellationToken, () => buffer);
         }
