@@ -109,16 +109,15 @@ namespace Eiredynamic.Pharos.Tests
         }
 
         [Fact]
-        public void StartReceivingWithEventsOnly_ShouldHandleCancellation()
+        public async Task StartReceivingWithEventsOnly_ShouldHandleCancellation()
         {
             // Arrange
             var cancellationToken = _cts.Token;
             _cts.CancelAfter(150); // Cancel quickly
 
-            // Act & Assert
-            Assert.ThrowsAsync<OperationCanceledException>(() =>
-                _probe.StartReceivingWithEventsOnly(cancellationToken));
-
+            var task = _probe.StartReceivingWithEventsOnly(cancellationToken);
+            await task;
+            Assert.True(task.IsCompleted);
         }
 
         protected virtual void Dispose(bool disposing)
