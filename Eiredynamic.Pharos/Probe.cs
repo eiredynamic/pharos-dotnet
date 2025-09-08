@@ -50,6 +50,10 @@ public class Probe<T>: IProbe<T> where T : class
     {
         await foreach (var item in ReceiveMessages(cancellationToken))
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                yield break;
+            }
             yield return item;
         }
     }

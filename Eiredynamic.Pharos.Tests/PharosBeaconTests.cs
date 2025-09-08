@@ -48,38 +48,38 @@ namespace Eiredynamic.Pharos.Tests
         }
 
         [Fact]
-        public void SendBeacon_CancellationRequested_StopsBeacon()
+        public async Task SendBeacon_CancellationRequested_StopsBeacon()
         {
             // Arrange
             var beacon = new Beacon<TestMessage>(_config);
             var message = new TestMessage { Content = "Test" };
             _cts.CancelAfter(150); // Cancel after ~1 beacon
 
-            // Act & Assert
-            Assert.ThrowsAsync<OperationCanceledException>(() =>
-                Record.ExceptionAsync(() => beacon.SendBeacon(_cts.Token, message)));
+            var task = beacon.SendBeacon(_cts.Token, message);
+            await task;
+            Assert.True(task.IsCompletedSuccessfully);
         }
 
         [Fact]
-        public void SendBeacon_NullMessage_ThrowsArgumentNullException()
+        public async Task SendBeacon_NullMessage_ThrowsArgumentNullException()
         {
             // Arrange
             var beacon = new Beacon<TestMessage>(_config);
 
             // Act & Assert
-            Assert.ThrowsAsync<ArgumentNullException>(() =>
+            await Assert.ThrowsAsync<ArgumentNullException>(() =>
                 beacon.SendBeacon(_cts.Token, () => null!));
         }
 
         [Fact]
-        public void DummyBeacon_SendBeacon_ThrowsNotImplementedException()
+        public async Task DummyBeacon_SendBeacon_ThrowsNotImplementedException()
         {
             // Arrange
             var dummyBeacon = new DummyBeacon<TestMessage>();
             var message = new TestMessage { Content = "Test" };
 
             // Act & Assert
-            Assert.ThrowsAsync<NotImplementedException>(() =>
+            await Assert.ThrowsAsync<NotImplementedException>(() =>
                 dummyBeacon.SendBeacon(_cts.Token, message));
         }
 
